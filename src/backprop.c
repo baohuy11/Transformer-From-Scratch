@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "../include/backprop.h"
+
 // FUNCTION TO CALCULATE MEAN SQUARED ERROR (MSE)
 double calculate_mse(double output_array[], double expected_output_array[], int size){
     double mse = 0.0;
