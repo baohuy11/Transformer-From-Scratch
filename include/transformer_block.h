@@ -9,6 +9,7 @@ double* positional_encoding(int index, int vector_size);
 
 #define MATRIX_SIZE 2
 #define EMBEDDING_DIM 2
+#define CLIP_THRESHOLD 100
 
 // DEFINE MATRICES
 extern double k_matrix[MATRIX_SIZE][MATRIX_SIZE];
