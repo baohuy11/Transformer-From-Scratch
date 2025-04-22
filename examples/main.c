@@ -34,7 +34,7 @@ int main(){
 /////////////////////////////   LEVEL1: TRAINING DATA PREPARATION //////////////////////////
 
     // LOAD OUR RAW TEXT DATA
-    char *raw_text = readFileToString("text_data.txt");  // READ THE FILE CONTENT
+    char *raw_text = readFileToString("test_data.txt");  // READ THE FILE CONTENT
 
     if(!raw_text){
         printf("Error: Failed to load text data\n");
@@ -206,7 +206,7 @@ read_weights(path, semi_final_layer_weights, 512 * 64 );
 
 
 ///////////////////////// FINAL LAYER NODES//////////////////////////////////
-double final_layer_weights[ 65* 2] = { 0.0 };
+double final_layer_weights[65 * 2] = {0.0};
 
 const char* path_2 = "Model_Trained_Weights/Final_Weights/";
 read_weights( path_2 , final_layer_weights , 64 * 2);
@@ -528,8 +528,8 @@ for (int epoch = 0; epoch < epochs; epoch++) {
             printf("final_layer_weights[%d] = %f\n", i, final_layer_weights[i]);
         }
         printf(".\n.\n.\n");
-        printf("final_layer_weights[%d] = %f\n", 130, final_layer_weights[ 130 ]);
-        printf("final_layer_weights[%d] = %f\n", 130 , final_layer_weights[ 130 ]);
+        printf("final_layer_weights[%d] = %f\n", 64, final_layer_weights[64]);
+        printf("final_layer_weights[%d] = %f\n", 65, final_layer_weights[65]);
 
 
 

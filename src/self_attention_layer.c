@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "../include/self_attention_layer.h"
+#include "../include/utils.h"
 
 // Model hyperparameters
 #define VOCAB_SIZE 1000        // Size of the vocabulary
@@ -48,15 +49,15 @@ void softmax(float *input, float *output, int length){
 }
 
 // FUNCTION TO INITIALIZE THE TOKEN EMBEDDING MATRIX
-void initialize_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM]){
+void initialize_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM]) {
     assert(embedding != NULL);
     
     printf("Initializing token embedding matrix:\n\n");
-    for(int i = 0; i < VOCAB_SIZE; i++){
+    for(int i = 0; i < VOCAB_SIZE; i++) {
         printf("Embedding vector for token index %d: [", i);
-        for(int j = 0; j < EMBEDDING_DIM; j++){
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
             // Initialize with random values between -0.5 and 0.5
-            embedding[i][j] = ((float)rand() / RAND_MAX) - 0.5f;
+            embedding[i][j] = ((float)rand() / (float)(RAND_MAX / 2)) - 0.5f;
             printf("%f", embedding[i][j]);
             if(j < EMBEDDING_DIM - 1) {
                 printf(", ");
@@ -68,22 +69,22 @@ void initialize_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM]){
 }
 
 // FUNCTION TO GENERATE POSITIONAL ENCODING
-void generate_positional_encoding(float positional_encoding[MAX_SEQ_LENGTH][EMBEDDING_DIM]){
+void generate_positional_encoding(float positional_encoding[VOCAB_SIZE][EMBEDDING_DIM]) {
     assert(positional_encoding != NULL);
     
     printf("Generating positional encoding matrix:\n\n");
-    for(int pos = 0; pos < MAX_SEQ_LENGTH; pos++){
-        for(int i = 0; i < EMBEDDING_DIM; i++){
-            if(i % 2 == 0){
+    for(int pos = 0; pos < MAX_SEQ_LENGTH; pos++) {
+        for(int i = 0; i < EMBEDDING_DIM; i++) {
+            if(i % 2 == 0) {
                 positional_encoding[pos][i] = sin(pos / pow(10000, (2.0 * i / EMBEDDING_DIM)));  
             } else {
                 positional_encoding[pos][i] = cos(pos / pow(10000, (2.0 * (i - 1) / EMBEDDING_DIM)));  
             }
         }
         printf("Positional Encoding for position %d: [", pos);
-        for(int j = 0; j < EMBEDDING_DIM; j++){
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
             printf("%f", positional_encoding[pos][j]);
-            if(j < EMBEDDING_DIM - 1){
+            if(j < EMBEDDING_DIM - 1) {
                 printf(", ");
             }
         }
@@ -93,9 +94,9 @@ void generate_positional_encoding(float positional_encoding[MAX_SEQ_LENGTH][EMBE
 }
 
 // FUNCTION TO LOOKUP EMBEDDING FOR A GIVEN TOKEN INDEX
-void lookup_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM], int token_index, float *output){
+void lookup_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM], int token_index, float *output) {
     printf("Looking up Embedding for Token Index %d:\n\n", token_index);
-    for(int i = 0; i < EMBEDDING_DIM; i++){
+    for(int i = 0; i < EMBEDDING_DIM; i++) {
         output[i] = embedding[token_index][i];
         printf("output[%d] = %f\n", i, output[i]);
     }
@@ -104,10 +105,10 @@ void lookup_embedding(float embedding[VOCAB_SIZE][EMBEDDING_DIM], int token_inde
 }
 
 // FUNCTION TO CONCATENATE TOKEN EMBEDDING AND POSITIONAL EMBEDDING
-void concatenate_embeddings(float token_embedding[EMBEDDING_DIM], float positional_embedding[EMBEDDING_DIM], float *output){
+void concatenate_embeddings(float token_embedding[EMBEDDING_DIM], float positional_embedding[EMBEDDING_DIM], float *output) {
     printf("Concatenating Token and Positional Embedding:\n\n");
     
-    for(int i = 0; i < EMBEDDING_DIM; i++){
+    for(int i = 0; i < EMBEDDING_DIM; i++) {
         output[i] = token_embedding[i] + positional_embedding[i];  
         printf("Concatenated output[%d] = %f\n", i, output[i]);
     }
@@ -127,17 +128,17 @@ void matrix_multiply(float A[MAX_SEQ_LENGTH][EMBEDDING_DIM], float B[EMBEDDING_D
     }
 }
 
-// FUNCTION TO INITIALIZE WEIGHT MATRICES
-void initialize_weight_matrix(float weight[EMBEDDING_DIM][EMBEDDING_DIM]){
-    for(int i = 0; i < EMBEDDING_DIM; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            weight[i][j] = ((float) rand() / (float)(RAND_MAX)) - 0.5; // Random values between -0.5 and 0.5
+// FUNCTION TO INITIALIZE A WEIGHT MATRIX
+void initialize_weight_matrix(float weight[EMBEDDING_DIM][EMBEDDING_DIM]) {
+    for(int i = 0; i < EMBEDDING_DIM; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            weight[i][j] = ((float)rand() / (float)(RAND_MAX / 2)) - 0.5f;
         }
     }
 }
 
 // FUNCTION TO COMPUTE SELF-ATTENTION WITH TRAINABLE K, Q, V
-void self_attention(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length){
+void self_attention(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length) {
     float W_Q[EMBEDDING_DIM][EMBEDDING_DIM]; // Weight matrix for Q
     float W_K[EMBEDDING_DIM][EMBEDDING_DIM]; // Weight matrix for K
     float W_V[EMBEDDING_DIM][EMBEDDING_DIM]; // Weight matrix for V
@@ -152,30 +153,30 @@ void self_attention(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX
     float V[MAX_SEQ_LENGTH][EMBEDDING_DIM]; // Value matrix
 
     // Compute Q, K, V by multiplying input with the weight matrices
-    matrix_multiply(input, W_Q, Q, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
-    matrix_multiply(input, W_K, K, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
-    matrix_multiply(input, W_V, V, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
+    matrix_multiply_float((float*)input, (float*)W_Q, (float*)Q, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
+    matrix_multiply_float((float*)input, (float*)W_K, (float*)K, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
+    matrix_multiply_float((float*)input, (float*)W_V, (float*)V, seq_length, EMBEDDING_DIM, EMBEDDING_DIM);
 
     float attention_scores[MAX_SEQ_LENGTH][MAX_SEQ_LENGTH] = {0};
     float attention_weights[MAX_SEQ_LENGTH][MAX_SEQ_LENGTH] = {0};
 
     // Compute attention scores
-    for(int i = 0; i < seq_length; i++){
-        for (int j = 0; j < seq_length; j++){
-            attention_scores[i][j] = dot_product(Q[i], K[j], EMBEDDING_DIM) / sqrt(EMBEDDING_DIM);
+    for(int i = 0; i < seq_length; i++) {
+        for (int j = 0; j < seq_length; j++) {
+            attention_scores[i][j] = dot_product_float(Q[i], K[j], EMBEDDING_DIM) / sqrt(EMBEDDING_DIM);
         }
     }
 
     // Compute attention weights using softmax
-    for(int i = 0; i < seq_length; i++){
-        softmax(attention_scores[i], attention_weights[i], seq_length);
+    for(int i = 0; i < seq_length; i++) {
+        softmax_float(attention_scores[i], attention_weights[i], seq_length);
     }
 
     // Compute output of self-attention
-    for(int i = 0; i < seq_length; i++){
-        for (int j = 0; j < EMBEDDING_DIM; j++){
+    for(int i = 0; i < seq_length; i++) {
+        for (int j = 0; j < EMBEDDING_DIM; j++) {
             output[i][j] = 0.0f;
-            for(int k = 0; k < seq_length; k++){
+            for(int k = 0; k < seq_length; k++) {
                 output[i][j] += attention_weights[i][k] * V[k][j];
             }
         }
@@ -236,26 +237,26 @@ void feed_forward(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_S
     free(intermediate);
 }
 
-void layer_normalization(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length){
-    for(int i = 0; i < seq_length; i++){
+// FUNCTION TO APPLY LAYER NORMALIZATION
+void layer_normalization(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length) {
+    for(int i = 0; i < seq_length; i++) {
+        // Calculate mean
         float mean = 0.0f;
-        float variance = 0.0f;
-        
-        // Compute the mean
-        for(int j = 0; j < EMBEDDING_DIM; j++){
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
             mean += input[i][j];
         }
         mean /= EMBEDDING_DIM;
 
-        // Compute the variance
-        for(int j = 0; j < EMBEDDING_DIM; j++){
+        // Calculate variance
+        float variance = 0.0f;
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
             variance += (input[i][j] - mean) * (input[i][j] - mean);
         }
         variance /= EMBEDDING_DIM;
 
-        // Compute the normalization
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            output[i][j] = (input[i][j] - mean) / sqrt(variance + EPSILON); // Add epsilon for numerical stability
+        // Normalize
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            output[i][j] = (input[i][j] - mean) / sqrt(variance + EPSILON);
         }
     }
 }

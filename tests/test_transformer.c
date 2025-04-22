@@ -78,8 +78,14 @@ void test_attention() {
     float embedding[MATRIX_SIZE][MATRIX_SIZE] = {{1.0, 2.0}, {3.0, 4.0}};
     double self_attention_result[MATRIX_SIZE][MATRIX_SIZE];
     
-    // Initialize attention matrices
-    initialize_matrices_from_files();
+    // Initialize attention matrices with test values
+    for (int i = 0; i < MATRIX_SIZE; i++) {
+        for (int j = 0; j < MATRIX_SIZE; j++) {
+            k_matrix[i][j] = 0.5;
+            q_matrix[i][j] = 0.5;
+            v_matrix[i][j] = 0.5;
+        }
+    }
     
     // Compute self attention
     compute_self_attention(embedding, k_matrix, q_matrix, v_matrix, MATRIX_SIZE, self_attention_result);
