@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 /* Define hash table size */
-#define TABLE_SIZE 5000
+#define TABLE_SIZE 100000
 
 /**
  * @brief Structure representing a word token in the hash table.
@@ -20,6 +20,7 @@ typedef struct word_token_node {
     char *word;                         /**< Dynamically allocated string for the word */
     unsigned int token_id;              /**< Unique token ID assigned to this word */
     struct word_token_node *next;       /**< Pointer to the next node in case of hash collisions */
+    float embedding[2];                 /**< 2-element word embedding vector */
 } word_token_node;
 
 /* Global variables */

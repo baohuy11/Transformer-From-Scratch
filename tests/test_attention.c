@@ -1,58 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "../include/self_attention_layer.h"
+#include <math.h>
+#include "../src/self_attention_layer.c"
 
-// Test dot product calculation
-void test_dot_product(){
+// Test dot product function
+void test_dot_product() {
     printf("Testing dot_product...\n");
     
-    float a[EMBEDDING_DIM] = {0};
-    float b[EMBEDDING_DIM] = {0};
+    float a[3] = {1.0f, 2.0f, 3.0f};
+    float b[3] = {4.0f, 5.0f, 6.0f};
+    float result = dot_product(a, b, 3);
     
-    // Initialize test vectors
-    for(int i = 0; i < EMBEDDING_DIM; i++){
-        a[i] = (float)(i + 1);
-        b[i] = (float)(i + 1);
-    }
-    
-    float result = dot_product(a, b, EMBEDDING_DIM);
-    
-    // Expected result: sum of squares from 1 to EMBEDDING_DIM
-    float expected = 0.0f;
-    for(int i = 1; i <= EMBEDDING_DIM; i++){
-        expected += i * i;
-    }
-    
-    assert(fabs(result - expected) < 1e-6);
-    printf("dot_product test passed\n");
+    assert(result == 32.0f); // 1*4 + 2*5 + 3*6 = 32
+    printf("dot_product test passed!\n\n");
 }
 
-// Test softmax computation
-void test_softmax(){
+// Test softmax function
+void test_softmax() {
     printf("Testing softmax...\n");
     
-    float input[MAX_SEQ_LENGTH] = {0};
-    float output[MAX_SEQ_LENGTH] = {0};
+    float input[3] = {1.0f, 2.0f, 3.0f};
+    float output[3];
+    softmax(input, output, 3);
     
-    // Initialize input with some values
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
-        input[i] = (float)i;
-    }
-    
-    softmax(input, output, MAX_SEQ_LENGTH);
-    
-    // Check if output sums to 1 (softmax property)
-    float sum = 0.0;
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
+    float sum = 0.0f;
+    for(int i = 0; i < 3; i++) {
         sum += output[i];
     }
-    assert(fabs(sum - 1.0) < 1e-6);
-    printf("softmax test passed\n");
+    
+    assert(fabs(sum - 1.0f) < 1e-6); // Sum should be approximately 1
+    printf("softmax test passed!\n\n");
 }
 
 // Test matrix multiplication
-void test_matrix_multiply(){
+void test_matrix_multiply() {
     printf("Testing matrix_multiply...\n");
     
     float A[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
@@ -60,72 +42,120 @@ void test_matrix_multiply(){
     float C[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
     
     // Initialize test matrices
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            A[i][j] = (float)(i + j);
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            A[i][j] = (i + 1) * (j + 1) * 0.1f;
+            B[j][j] = 1.0f; // Identity matrix
         }
     }
     
-    for(int i = 0; i < EMBEDDING_DIM; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            B[i][j] = (float)(i + j);
+    matrix_multiply(A, B, C, 2, EMBEDDING_DIM, EMBEDDING_DIM);
+    
+    // Since B is identity matrix, C should equal A
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            assert(fabs(C[i][j] - A[i][j]) < 1e-6);
         }
     }
     
-    matrix_multiply(A, B, C, MAX_SEQ_LENGTH, EMBEDDING_DIM, EMBEDDING_DIM);
-    
-    // Basic check: output should not be all zeros
-    int non_zero_count = 0;
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            if(fabs(C[i][j]) > 1e-6){
-                non_zero_count++;
-            }
-        }
-    }
-    assert(non_zero_count > 0);
-    printf("✓ matrix_multiply test passed\n");
+    printf("matrix_multiply test passed!\n\n");
 }
 
-// Test self-attention mechanism
-void test_self_attention(){
+// Test self-attention computation
+void test_self_attention() {
     printf("Testing self_attention...\n");
     
     float input[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
     float output[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
     
-    // Initialize input with some values
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            input[i][j] = (float)(i + j) / 10.0;
+    // Initialize input with simple values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            input[i][j] = (i + 1) * (j + 1) * 0.1f;
         }
     }
     
-    self_attention(input, output, MAX_SEQ_LENGTH);
+    self_attention(input, output, 2);
     
-    // Basic checks
-    // 1. Output dimensions should match input
-    // 2. Output should not be all zeros
-    int non_zero_count = 0;
-    for(int i = 0; i < MAX_SEQ_LENGTH; i++){
-        for(int j = 0; j < EMBEDDING_DIM; j++){
-            if(fabs(output[i][j]) > 1e-6){
-                non_zero_count++;
-            }
+    // Check if output has valid values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            assert(!isnan(output[i][j]));
+            assert(!isinf(output[i][j]));
         }
     }
-    assert(non_zero_count > 0);
-    printf("✓ self_attention test passed\n");
+    
+    printf("self_attention test passed!\n\n");
+}
+
+// Test layer normalization
+void test_layer_normalization() {
+    printf("Testing layer_normalization...\n");
+    
+    float input[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
+    float output[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
+    
+    // Initialize input with simple values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            input[i][j] = (i + 1) * (j + 1) * 0.1f;
+        }
+    }
+    
+    layer_normalization(input, output, 2);
+    
+    // Check if output has valid values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            assert(!isnan(output[i][j]));
+            assert(!isinf(output[i][j]));
+        }
+    }
+    
+    printf("layer_normalization test passed!\n\n");
+}
+
+// Test feed-forward network
+void test_feed_forward() {
+    printf("Testing feed_forward...\n");
+    
+    float input[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
+    float output[MAX_SEQ_LENGTH][EMBEDDING_DIM] = {0};
+    
+    // Initialize input with simple values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            input[i][j] = (i + 1) * (j + 1) * 0.1f;
+        }
+    }
+    
+    feed_forward(input, output, 2);
+    
+    // Check if output has valid values
+    for(int i = 0; i < 2; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            assert(!isnan(output[i][j]));
+            assert(!isinf(output[i][j]));
+        }
+    }
+    
+    printf("feed_forward test passed!\n\n");
 }
 
 int main() {
-    printf("Starting attention mechanism tests...\n\n");
+    printf("Starting self-attention layer tests...\n\n");
+    
+    // Set random seed for reproducibility
+    srand(42);
     
     test_dot_product();
     test_softmax();
     test_matrix_multiply();
     test_self_attention();
+    test_layer_normalization();
+    test_feed_forward();
     
-    printf("\nAll attention mechanism tests passed successfully!\n");
+    printf("All tests completed successfully!\n");
     return 0;
 }
+

@@ -616,12 +616,12 @@ for (int epoch = 0; epoch < epochs; epoch++) {
 }
 
     // Cleanup
-    for(int i = 0; i < training_data_count; i++) {
+    for(int i = 0; i < training_data_count; i++){
         free(training_data[i]);
     }
     free(training_data);
     free(raw_text);
-    for(int i = 0; i < num_sentences; i++) {
+    for(int i = 0; i < num_sentences; i++){
         free(sentences[i]);
     }
     free(sentences);

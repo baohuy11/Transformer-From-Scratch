@@ -10,6 +10,7 @@
 #define EMBEDDING_DIM 512      // Dimension of token embeddings
 #define MAX_SEQ_LENGTH 128     // Maximum sequence length
 #define EPSILON 1e-6          // Small value for numerical stability
+#define FF_DIM 2048          // Feed-forward network dimension
 
 // FUNCTION TO COMPUTE THE DOT PRODUCT OF TWO VECTORS
 float dot_product(float *a, float *b, int dim){
@@ -181,26 +182,58 @@ void self_attention(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX
     }
 }
 
-void feed_forward(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length){
-    float W1[EMBEDDING_DIM][EMBEDDING_DIM * 4]; // First layer weights
-    float W2[EMBEDDING_DIM * 4][EMBEDDING_DIM]; // Second layer weights
+void feed_forward(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length) {
+    // Allocate memory for weights and intermediate values
+    float (*W1)[FF_DIM] = malloc(sizeof(float[EMBEDDING_DIM][FF_DIM]));
+    float (*W2)[EMBEDDING_DIM] = malloc(sizeof(float[FF_DIM][EMBEDDING_DIM]));
+    float (*intermediate)[FF_DIM] = malloc(sizeof(float[MAX_SEQ_LENGTH][FF_DIM]));
+    
+    if (!W1 || !W2 || !intermediate) {
+        printf("Memory allocation failed in feed_forward\n");
+        if (W1) free(W1);
+        if (W2) free(W2);
+        if (intermediate) free(intermediate);
+        return;
+    }
     
     // Initialize weights
-    initialize_weight_matrix(W1);
-    initialize_weight_matrix(W2);
+    for(int i = 0; i < EMBEDDING_DIM; i++) {
+        for(int j = 0; j < FF_DIM; j++) {
+            W1[i][j] = ((float) rand() / (float)(RAND_MAX)) - 0.5;
+        }
+    }
+    
+    for(int i = 0; i < FF_DIM; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            W2[i][j] = ((float) rand() / (float)(RAND_MAX)) - 0.5;
+        }
+    }
     
     // First linear transformation with ReLU
-    float intermediate[MAX_SEQ_LENGTH][EMBEDDING_DIM * 4] = {0};
-    matrix_multiply(input, W1, intermediate, seq_length, EMBEDDING_DIM, EMBEDDING_DIM * 4);
-    
-    for(int i = 0; i < seq_length; i++){
-        for (int j = 0; j < EMBEDDING_DIM * 4; j++){
+    for(int i = 0; i < seq_length; i++) {
+        for(int j = 0; j < FF_DIM; j++) {
+            intermediate[i][j] = 0;
+            for(int k = 0; k < EMBEDDING_DIM; k++) {
+                intermediate[i][j] += input[i][k] * W1[k][j];
+            }
             intermediate[i][j] = fmax(0, intermediate[i][j]); // ReLU activation
         }
     }
     
     // Second linear transformation
-    matrix_multiply(intermediate, W2, output, seq_length, EMBEDDING_DIM * 4, EMBEDDING_DIM);
+    for(int i = 0; i < seq_length; i++) {
+        for(int j = 0; j < EMBEDDING_DIM; j++) {
+            output[i][j] = 0;
+            for(int k = 0; k < FF_DIM; k++) {
+                output[i][j] += intermediate[i][k] * W2[k][j];
+            }
+        }
+    }
+    
+    // Free allocated memory
+    free(W1);
+    free(W2);
+    free(intermediate);
 }
 
 void layer_normalization(float input[MAX_SEQ_LENGTH][EMBEDDING_DIM], float output[MAX_SEQ_LENGTH][EMBEDDING_DIM], int seq_length){
